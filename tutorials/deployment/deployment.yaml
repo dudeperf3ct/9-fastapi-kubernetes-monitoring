@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-python-api
+spec:
+  selector:
+    matchLabels:
+      app: hello-python # this must match the labels we set on the pod
+  replicas: 4 # tells deployment number of identical pods to create
+  template:
+    metadata:
+      labels:
+        app: hello-python # labels on the pod
+    spec:
+      containers:
+        - name: hello-python-container
+          image: digitalocean/flask-helloworld:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000

@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: countdown-job
+spec:
+  backoffLimit: 4 # Once .spec.backoffLimit has been reached the Job will be marked as failed and any running Pods will be terminated.
+  template:
+    metadata:
+      name: countdown
+    spec:
+      containers:
+        - name: counter-container
+          image: centos:7
+          command:
+            - "bin/bash"
+            - "-c"
+            - "for i in 9 8 7 6 5 4 3 2 1 ; do echo $i ; done"
+      restartPolicy: Never

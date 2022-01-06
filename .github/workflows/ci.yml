@@ -1,0 +1,90 @@
+# This workflow will create and publish a Docker image to Github Container Registry, run tests using pytest and perform linting using trunk.io
+name: Continuous Integration Workflow
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+env:
+  IMAGE_NAME: sentiment-fastapi
+
+jobs:
+  # run tests to make sure everything is passes
+  tests:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: pip install -r app/requirements-tests.txt
+
+      - name: Test with pytest
+        run: |
+          pytest --cov
+
+  # lint with trunk actions
+  linter:
+    name: "Run linting using trunk github actions"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Caching is only needed when using ephemeral CI runners
+      - name: Cache Linters/Formatters
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/trunk
+          key: trunk-${{ runner.os }}
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v0.3.0-beta
+
+  # Push image to GitHub Packages
+  build-and-push-image:
+    # Ensure test job passes before pushing image.
+    needs: tests
+    name: Build and push docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build --tag $IMAGE_NAME --file app/Dockerfile app/  --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.CONTAINER_REGISTRY_GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

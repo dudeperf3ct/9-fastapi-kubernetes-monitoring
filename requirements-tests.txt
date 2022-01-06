@@ -1,0 +1,10 @@
+Fastapi
+uvicorn
+starlette
+-f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
+torch==1.8.2+cpu
+transformers==4.13.0
+loguru==0.5.3
+prometheus-fastapi-instrumentator==5.7.1
+pytest==6.2.5
+pytest-cov==3.0.0
