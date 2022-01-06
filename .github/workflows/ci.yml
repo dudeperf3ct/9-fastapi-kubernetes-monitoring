@@ -25,7 +25,7 @@ jobs:
           python-version: 3.8
 
       - name: Install dependencies
-        run: pip install -r app/requirements-tests.txt
+        run: pip install -r requirements-tests.txt
 
       - name: Test with pytest
         run: |
@@ -48,7 +48,7 @@ jobs:
           key: trunk-${{ runner.os }}
 
       - name: Trunk Check
-        uses: trunk-io/trunk-action@v0.3.0-beta
+        uses: trunk-io/trunk-action@v0.5.0-beta
 
   # Push image to GitHub Packages
   build-and-push-image:
