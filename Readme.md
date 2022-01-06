@@ -18,7 +18,7 @@ docker run --rm -it sentiment
 Test the fastapi application
 
 ```bash
-docker build -t sentiment-fastapi -f app/Dockerfile app/
+docker build -t sentiment-fastapi .
 docker run -p 8000:8000 -e ENABLE_METRICS=true sentiment-fastapi
 docker run -p 8000:8000 -it -v $(pwd):/app --entrypoint bash -e ENABLE_METRICS=true sentiment-fastapi # run tests with pytests
 pytest --cov
